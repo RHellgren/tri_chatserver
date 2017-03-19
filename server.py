@@ -38,20 +38,24 @@ def api_get_all_messages(user):
     return resp
 
 def messages_for_user(user, only_unread):
-    result = ""
+    list_of_messages = [];
     for message in messages:
         if message['to'] == user:
             if only_unread:
                 if not message['read']:
-                    result += message_json_to_string(message)
+                    list_of_messages.append(message_json_to_string(message))
             else:
-                result += message_json_to_string(message)
-    return result
+                list_of_messages.append(message_json_to_string(message))
+
+    string_of_messages = ""
+    list_of_messages.reverse()
+    for message in list_of_messages:
+        string_of_messages += message + "\n"
+
+    return string_of_messages
 
 def message_json_to_string(message):
-    result = ""
-
-    result += message['from'] + " wrote:\n"
+    result = message['from'] + " wrote:\n"
     result += message['content'] + "\n"
     result += "Message id: " + json.dumps(message['id']) + " sent on " + message['timestamp'] + "\n"
     message['read'] = True
@@ -60,31 +64,6 @@ def message_json_to_string(message):
 
 if __name__ == '__main__':
     global messages, next_id
-    messages = [
-        {
-            'id': 0,
-            'from': 'Robin',
-            'to': 'Hellgren',
-            'content': 'This is what I want to tell you!',
-            'read': False,
-            'timestamp': '2017-03-19 13:08:21'
-        },
-        {
-            'id': 1,
-            'from': 'Tri',
-            'to': 'Optima',
-            'content': 'This is the second message',
-            'read': False,
-            'timestamp': '2017-03-18 11:18:00'
-        },
-        {
-            'id': 2,
-            'from': 'Robin',
-            'to': 'Optima',
-            'content': 'Third message coming up!',
-            'read': False,
-            'timestamp': '2017-02-11 03:59:59'
-        }
-    ]
+    messages = []
     next_id = 3
     app.run()
