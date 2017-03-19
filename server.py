@@ -5,19 +5,37 @@ app = Flask(__name__)
 def api_root():
     return 'Welcome'
 
-@app.route('/messages/<user>/all', methods = ['GET'])
-def api_all_messages(user):
-    result = "";
+@app.route('/messages/<user>/new', methods = ['GET'])
+def api_get_new_messages(user):
+    result = ""
     for message in messages:
-        if message['to'] == user:
-            result += message['from'] + " wrote:\n"
-            result += message['content'] + "\n"
-            result += "Message id: " + json.dumps(message['id']) + " sent on " + message['timestamp'] + "\n"
+        if message['to'] == user and message['read'] == False:
+            result += message_json_to_string(message)
 
     resp = Response(result, status=200, mimetype='application/json')
-    resp.headers['Link'] = 'http://luisrei.com'
-
     return resp
+
+
+
+@app.route('/messages/<user>/all', methods = ['GET'])
+def api_get_all_messages(user):
+    result = ""
+    for message in messages:
+        if message['to'] == user:
+            result += message_json_to_string(message)
+
+    resp = Response(result, status=200, mimetype='application/json')
+    return resp
+
+def message_json_to_string(message):
+    result = ""
+
+    result += message['from'] + " wrote:\n"
+    result += message['content'] + "\n"
+    result += "Message id: " + json.dumps(message['id']) + " sent on " + message['timestamp'] + "\n"
+    message['read'] = True
+
+    return result
 
 if __name__ == '__main__':
     global messages
