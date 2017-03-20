@@ -2,10 +2,10 @@
 *Simple chat server in Python, handles GET and POST requests.*
 *Built to work in Python 2.7.10 with Flask 0.12 (see requirements.txt).*
 
-Build server with:
+Build server with:<br />
     > python server.py
 
-The following endpoints is implemented, with a short explanation and a curl example command:<br />
+The following endpoints are implemented, with a short explanation and a curl example command:<br />
 
   **[GET]** '/messages'<br />
   Returns all messages currently in the system<br />
