@@ -31,7 +31,7 @@ def api_write_new_message(user):
 
 @app.route('/messages/<user>/new', methods=['GET'])
 def api_get_new_messages(user):
-    result = get_all_messages_for_user(user, True, None, None)
+    result = get_all_messages_for_user(user, True, None, None, None, None)
     resp = Response(result, status=200, mimetype='text/plain')
     return resp
 
@@ -39,9 +39,11 @@ def api_get_new_messages(user):
 @app.route('/messages/<user>/all', methods=['GET'])
 def api_get_all_messages(user):
     if 'before' and 'after' in request.args:
-        result = get_all_messages_for_user(user, False, request.args['after'], request.args['before'])
+        result = get_all_messages_for_user(user, False, request.args['after'], request.args['before'], None, None)
+    elif 'start_index' and 'end_index' in request.args:
+        result = get_all_messages_for_user(user, False, None, None, request.args['start_index'], request.args['end_index'])
     else:
-        result = get_all_messages_for_user(user, False, None, None)
+        result = get_all_messages_for_user(user, False, None, None, None, None)
     resp = Response(result, status=200, mimetype='text/plain')
     return resp
 
@@ -67,6 +69,23 @@ def api_remove_message(id):
     return resp
 
 
+@app.route('/messages/remove_multiple', methods=['GET'])
+def api_remove_multiple_messages():
+    if 'start_index' and 'end_index' in request.args:
+        global MESSAGES
+        messages_to_keep = []
+        start_index = int(request.args['start_index'])
+        end_index = int(request.args['end_index'])
+        for message in MESSAGES:
+            if int(message['id']) > end_index or int(message['id']) < start_index:
+                messages_to_keep.append(message)
+        MESSAGES = messages_to_keep
+        resp = Response("Messages removed", status=200, mimetype='text/plain')
+    else:
+        resp = Response("You need to specify which messages to remove", status=200, mimetype='text/plain')
+    return resp
+
+
 def get_single_message(id):
     for message in MESSAGES:
         if message['id'] == id:
@@ -74,7 +93,7 @@ def get_single_message(id):
     return None
 
 
-def get_all_messages_for_user(user, only_unread, after, before):
+def get_all_messages_for_user(user, only_unread, after, before, start_index_string, end_index_string):
     list_of_messages = [];
 
     # Get all messages for this user
@@ -95,11 +114,19 @@ def get_all_messages_for_user(user, only_unread, after, before):
         filtered_list_of_messages = []
         after_datetime = datetime.datetime.strptime(after, '%Y-%m-%dT%H:%M:%S')
         before_datetime = datetime.datetime.strptime(before, '%Y-%m-%dT%H:%M:%S')
-        print(after_datetime)
-        print(before_datetime)
         for message in list_of_messages:
             message_datetime = datetime.datetime.strptime(message['timestamp'], '%Y-%m-%d %H:%M:%S')
             if message_datetime > after_datetime and message_datetime < before_datetime:
+                filtered_list_of_messages.append(message)
+        list_of_messages = filtered_list_of_messages
+
+    # Filter out messages outside of index range
+    if start_index_string is not None and end_index_string is not None:
+        start_index = int(start_index_string)
+        end_index = int(end_index_string)
+        filtered_list_of_messages = []
+        for message in list_of_messages:
+            if start_index <= int(message['id']) <= end_index:
                 filtered_list_of_messages.append(message)
         list_of_messages = filtered_list_of_messages
 
